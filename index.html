@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
+  <title>Lima Turística · Sitios emblemáticos</title>
+  <!-- Fuente y estilos base -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <h1>
+        🌿 Lima·Turismo
+        <span>Patrimonio</span>
+      </h1>
+      <p>Descubre los rincones más fascinantes de la Ciudad de los Reyes · cultura, historia y paisajes.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Filtros -->
+    <div class="nav-filters" id="filterContainer">
+      <button class="filter-btn active" data-filter="todos">📍 Todos</button>
+      <button class="filter-btn" data-filter="historico">🏛️ Histórico</button>
+      <button class="filter-btn" data-filter="naturaleza">🌳 Naturaleza</button>
+      <button class="filter-btn" data-filter="moderno">🌆 Moderno</button>
+    </div>
+
+    <!-- Contador de favoritos -->
+    <div class="counter-wrapper">
+      <div class="favorite-counter" id="favoriteCounter">❤️ 0 favoritos</div>
+    </div>
+
+    <!-- Grid de tarjetas -->
+    <div class="cards-grid" id="cardsGrid"></div>
+  </main>
+
+  <footer class="container footer">
+    <p>✨ Lima — ciudad que siempre sorprende · 2026</p>
+  </footer>
+
+  <script>
+    (function() {
+      // ---------- DATOS DE SITIOS TURÍSTICOS ----------
+      const lugares = [
+        {
+          id: 1,
+          nombre: "Centro Histórico de Lima",
+          categoria: "historico",
+          imagen: "https://source.unsplash.com/featured/?lima-peru,plaza-mayor",
+          descripcion: "Plaza Mayor, Catedral, Palacio de Gobierno y balcones coloniales. Corazón de la ciudad.",
+          likes: 24,
+        },
+        {
+          id: 2,
+          nombre: "Miraflores · Malecón",
+          categoria: "moderno",
+          imagen: "https://source.unsplash.com/featured/?miraflores,lima,cliff",
+          descripcion: "Vista al Pacífico, parques, ciclovías y el icónico Parque del Amor.",
+          likes: 18,
+        },
+        {
+          id: 3,
+          nombre: "Huaca Pucllana",
+          categoria: "historico",
+          imagen: "https://source.unsplash.com/featured/?huaca-pucllana,lima",
+          descripcion: "Pirámide preincaica en pleno distrito de Miraflores. Centro ceremonial y museo.",
+          likes: 12,
+        },
+        {
+          id: 4,
+          nombre: "Parque de las Leyendas",
+          categoria: "naturaleza",
+          imagen: "https://source.unsplash.com/featured/?zoo,lima,parque",
+          descripcion: "Zoológico y jardines con flora y fauna peruana, ideal para familias.",
+          likes: 9,
+        },
+        {
+          id: 5,
+          nombre: "Barranco · Puente de los Suspiros",
+          categoria: "moderno",
+          imagen: "https://source.unsplash.com/featured/?barranco,lima,puente",
+          descripcion: "Barrio bohemio, murales, vida nocturna y el mítico puente con vista al mar.",
+          likes: 31,
+        },
+        {
+          id: 6,
+          nombre: "Lomas de Lachay",
+          categoria: "naturaleza",
+          imagen: "https://source.unsplash.com/featured/?lomas,lachay,peru",
+          descripcion: "Reserva natural al norte de Lima, con flora y fauna endémica en primavera.",
+          likes: 7,
+        }
+      ];
+
+      // ---------- ESTADO ----------
+      let currentFilter = "todos";
+      // Mapa de likes por id (para mantener estado local)
+      let likesMap = new Map();
+      lugares.forEach(l => likesMap.set(l.id, l.likes));
+
+      // Elementos del DOM
+      const grid = document.getElementById('cardsGrid');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const favoriteCounter = document.getElementById('favoriteCounter');
+
+      // ---------- FUNCIONES AUXILIARES ----------
+      function getFilteredPlaces() {
+        if (currentFilter === "todos") return lugares;
+        return lugares.filter(l => l.categoria === currentFilter);
+      }
+
+      // Actualiza el contador de favoritos (suma de likes)
+      function updateCounter() {
+        let total = 0;
+        for (let [id, value] of likesMap) {
+          total += value;
+        }
+        favoriteCounter.textContent = `❤️ ${total} favoritos`;
+      }
+
+      // Renderiza las tarjetas según filtro
+      function renderCards() {
+        const filtered = getFilteredPlaces();
+        if (filtered.length === 0) {
+          grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:3rem 0; color:#5d6f73;">No hay sitios en esta categoría</p>`;
+          return;
+        }
+
+        let html = '';
+        filtered.forEach(lugar => {
+          const likeCount = likesMap.get(lugar.id) || 0;
+          const likedClass = (likeCount > 0) ? 'liked' : ''; // si tiene likes, mostramos corazón lleno (estético)
+          html += `
+            <div class="card" data-id="${lugar.id}" data-categoria="${lugar.categoria}">
+              <img class="card-img" src="${lugar.imagen}" alt="${lugar.nombre}" loading="lazy" onerror="this.src='https://placehold.co/600x400/e0d9ce/2a4f52?text=Lima+Turismo'">
+              <div class="card-body">
+                <h3>${lugar.nombre}</h3>
+                <span class="card-tag">${lugar.categoria}</span>
+                <p class="card-desc">${lugar.descripcion}</p>
+                <div class="card-footer">
+                  <span>❤️ ${likeCount}</span>
+                  <button class="btn-like ${likedClass}" data-id="${lugar.id}" aria-label="Me gusta">♥</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+
+        // Actualizar contador global
+        updateCounter();
+      }
+
+      // ---------- MANEJADOR DE "ME GUSTA" (delegación) ----------
+      function handleLikeClick(e) {
+        const btn = e.target.closest('.btn-like');
+        if (!btn) return;
+        const id = Number(btn.dataset.id);
+        if (!id) return;
+
+        // Obtener likes actuales
+        let currentLikes = likesMap.get(id) || 0;
+        // Incrementar (podríamos hacer toggle, pero para simplicidad: suma 1)
+        currentLikes += 1;
+        likesMap.set(id, currentLikes);
+
+        // Actualizar el número en la tarjeta específica
+        const card = btn.closest('.card');
+        if (card) {
+          const footerSpan = card.querySelector('.card-footer span');
+          if (footerSpan) {
+            footerSpan.textContent = `❤️ ${currentLikes}`;
+          }
+          // Cambiar clase para efecto visual (si tiene likes)
+          btn.classList.add('liked');
+        }
+
+        // Actualizar contador global
+        updateCounter();
+      }
+
+      // ---------- FILTROS ----------
+      function setActiveFilter(filterValue) {
+        currentFilter = filterValue;
+        filterBtns.forEach(btn => {
+          const btnFilter = btn.dataset.filter;
+          btn.classList.toggle('active', btnFilter === filterValue);
+        });
+        renderCards();
+      }
+
+      // ---------- EVENTOS ----------
+      // Filtros
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          const filter = this.dataset.filter;
+          setActiveFilter(filter);
+        });
+      });
+
+      // Delegación para likes (click en cualquier .btn-like dentro del grid)
+      grid.addEventListener('click', handleLikeClick);
+
+      // ---------- INICIALIZAR ----------
+      renderCards();
+
+      // (Opcional) ajustar imagenes rotas con placeholder
+      // ya manejado con onerror en el img
+
+    })();
+  </script>
+</body>
+</html>
